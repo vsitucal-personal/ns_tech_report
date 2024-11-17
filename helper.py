@@ -123,6 +123,19 @@ def final_summary(df):
         top_nodes, bottom_nodes = nx.bipartite.sets(G)
     
         projected_V = nx.bipartite.projected_graph(G, vertices.rdd.flatMap(lambda x: x).collect())
+
+        projected_V = nx.bipartite.projected_graph(G, vertices.rdd.flatMap(lambda x: x).collect())
+    
+        pos = nx.fruchterman_reingold_layout(projected_V, seed=42)
+
+        plt.figure(figsize=(7, 7))
+        nx.draw_networkx_nodes(projected_V, pos, node_size=30, node_color="red", label="Holders")
+        nx.draw_networkx_edges(projected_V, pos, alpha=0.4)
+        plt.title("Holder-Holder Projection")
+        plt.axis("off")
+        plt.legend(scatterpoints=1, loc="upper left", fontsize=8, markerscale=0.5)
+        plt.show()
+        
         summary(projected_V)
       
         centrality_methods = [
@@ -177,7 +190,7 @@ def local_ownership(df, df100mn):
                 node_color=plt.cm.tab10(idx / len(connected_components)), 
                 label=component_label
             )
-            # Add labels for each node in the component
+            nx.draw_networkx_edges(G, pos, alpha=0.4)
             labels = {node: f'{node}' for node in component_nodes}
         plt.legend(scatterpoints=1, loc="lower left", fontsize=9, markerscale=0.5, bbox_to_anchor=(-0.21, 0), ncol=3)
         plt.axis("off")
@@ -210,6 +223,7 @@ def pdc():
     
     axs[0].axis("off") 
     axs[0].set_title("Bipartite View")
+    axs[0].legend(scatterpoints=1, loc="upper left", fontsize=8, markerscale=0.5)
     
     projected_V = nx.bipartite.projected_graph(G, vertices.rdd.flatMap(lambda x: x).collect())
     
@@ -219,6 +233,7 @@ def pdc():
     nx.draw_networkx_edges(projected_V, pos, ax=axs[1], alpha=0.4)
     axs[1].set_title("Holder-Holder Projection")
     axs[1].axis("off")
+    axs[1].legend(scatterpoints=1, loc="upper left", fontsize=8, markerscale=0.5)
     
     centrality_methods = [
         (nx.degree_centrality, "degree"),
@@ -229,10 +244,11 @@ def pdc():
     
     # List to store individual DataFrames
     centrality_dfs = []
-    
+
+    display(Markdown(f"**Holder-Holder Stats**"))
     for method, name in centrality_methods:
         cent_ = method(projected_V)
-        top = sorted(cent_.items(), key=lambda item: item[1], reverse=True)[:5]
+        top = sorted(cent_.items(), key=lambda item: item[1], reverse=True)[:3]
         centrality_dfs.append(pd.DataFrame(top, columns=['id', f'{name} Centrality']))
     
     all_centralities = pd.concat(centrality_dfs, axis=1)
