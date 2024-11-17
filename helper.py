@@ -140,7 +140,7 @@ def final_summary(df):
 def local_ownership(df, df100mn):
     my_list_sql = tuple(df100mn.rdd.flatMap(lambda x: x).collect())
     for year in ["2024"]:
-        display(Markdown(f"**{year}**"))
+        # display(Markdown(f"**{year}**"))
         ydf = df.select("src", "dst").filter((F.col(year).isNotNull()) & (F.col(year) != "0") & (F.trim(F.col(year)) != "") & (F.col("INVESTOR DOMICILE") == "Local"))
         ydf.createOrReplaceTempView("papers")
     
