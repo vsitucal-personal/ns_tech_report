@@ -144,11 +144,18 @@ def final_summary(df):
             (nx.closeness_centrality, "closeness"),
             (nx.pagerank, "pagerank"),
         ]
-        display(Markdown(f"**Centralities**"))
-        for methods_, name in centrality_methods:
-            cent_ = methods_(projected_V)
+
+        centrality_dfs = []
+
+        display(Markdown(f"**Holder-Holder Stats**"))
+        for method, name in centrality_methods:
+            cent_ = method(projected_V)
             top = sorted(cent_.items(), key=lambda item: item[1], reverse=True)[:3]
-            display(pd.DataFrame(top, columns=['id', f'{name} Centrality']))
+            centrality_dfs.append(pd.DataFrame(top, columns=['id', f'{name} Centrality']))
+        
+        all_centralities = pd.concat(centrality_dfs, axis=1)
+        plt.show()
+        display(all_centralities)
 
 def local_ownership(df, df100mn):
     my_list_sql = tuple(df100mn.rdd.flatMap(lambda x: x).collect())
@@ -253,8 +260,9 @@ def pdc():
     
     all_centralities = pd.concat(centrality_dfs, axis=1)
     plt.show()
-    display(all_centralities)
     summary(projected_V)
+    display(all_centralities)
+    
 
 def prep_df1():
     df = spark.read.csv("data/Index-Holders.csv", header=True, inferSchema=True)\
