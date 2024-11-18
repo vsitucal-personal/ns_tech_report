@@ -264,6 +264,56 @@ def pdc():
     display(all_centralities)
     
 
+def pdc_communities():
+    df_pdc = spark.read.csv("data/PDC-Network.csv", header=True, inferSchema=True)
+    df_pdc = df_pdc.withColumn("STOCK", F.regexp_replace(F.col("STOCK"), " PM Equity$", ""))
+    df_pdc = df_pdc.withColumnRenamed("STOCK", "src").withColumnRenamed("HOLDER NAME", "dst")
+    df_pdc = df_pdc.filter(~F.col('dst').like("%BENJAMIN CO CA & CO., INC.%"))
+    ydf = df_pdc.select("src", "dst")
+    
+    my_list_sql = tuple(df_pdc.rdd.flatMap(lambda x: x).collect())
+    
+    ydf.createOrReplaceTempView("papers")
+        
+    query = f"""
+    SELECT DISTINCT  
+            p1.dst AS src, 
+            p2.dst AS dst
+    FROM papers p1
+    JOIN papers p2
+    ON p1.src = p2.src
+    WHERE p1.dst != p2.dst
+    AND (p1.dst IN {my_list_sql} OR p2.dst IN {my_list_sql})
+    """
+    
+    result_df = spark.sql(query)
+    
+    G = nx.Graph()
+    G.add_edges_from(result_df.rdd.map(tuple).collect())
+    
+    pos = nx.fruchterman_reingold_layout(G, seed=50)
+    
+    connected_components = list(nx.connected_components(G))
+    
+    plt.figure(figsize=(18, 18))
+    for idx, component in enumerate(connected_components):
+        # Get the nodes in each component
+        component_nodes = list(component)
+        component_label = ',\n'.join(str(node) for node in component_nodes[:30])+",\n..."
+        
+        # Draw nodes with a specific color per component
+        nx.draw_networkx_nodes(
+            G, pos, nodelist=component_nodes, 
+            node_size=700, 
+            node_color=plt.cm.tab10(idx / len(connected_components)), 
+            label=component_label
+        )
+        nx.draw_networkx_edges(G, pos, alpha=0.4)
+        labels = {node: f'{node}' for node in component_nodes}
+    plt.legend(scatterpoints=1, loc="lower left", fontsize=9, markerscale=0.5, bbox_to_anchor=(-0.21, 0), ncol=3)
+    plt.axis("off")
+    plt.show()
+
 def prep_df1():
     df = spark.read.csv("data/Index-Holders.csv", header=True, inferSchema=True)\
         .drop("_c1", "PORTFOLIO NAME") \
