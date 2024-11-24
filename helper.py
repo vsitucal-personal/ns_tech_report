@@ -103,6 +103,7 @@ def make_bip_net_graph(df):
         nx.draw_networkx_edges(G, pos, alpha=0.4, ax=ax)
         nx.draw_networkx_labels(G, pos, labels={node: node for node in bottom_nodes}, font_size=10, font_color="white", ax=ax)
         ax.legend(scatterpoints=1, loc="upper left", fontsize=8, markerscale=0.5)
+    fig.savefig('output/2019-2024.png', dpi=150)
     return fig
 
 def final_summary(df):
