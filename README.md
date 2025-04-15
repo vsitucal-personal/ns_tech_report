@@ -31,6 +31,8 @@ Local direct ownership, excluding shares under the Philippine Depository and Tru
 
 The Philippine Depository & Trust Corporation (PDC) plays a crucial role as a custodian, holding shares on behalf of numerous investors. In the holder-holder projection, PDC's structure reveals a highly interconnected network.
 
+![](images/PDC_2.png)
+
 ![](images/PDC.png)
 
 ### Network Statistics:
